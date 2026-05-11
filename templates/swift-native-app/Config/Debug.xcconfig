@@ -1,0 +1,6 @@
+// Debug.xcconfig
+// Debug configuration for <ExampleApp> - minimal overrides only
+
+#include "Shared.xcconfig"
+
+// No additional debug-specific overrides needed

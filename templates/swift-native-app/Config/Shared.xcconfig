@@ -1,0 +1,63 @@
+// Shared.xcconfig
+// <ExampleApp> — Minimal shared configuration
+
+// ==========================================
+// Project Identity
+// ==========================================
+PRODUCT_NAME = <ExampleApp>
+PRODUCT_DISPLAY_NAME = <ExampleApp>
+PRODUCT_BUNDLE_IDENTIFIER = <your.bundle.prefix>.<example-app>
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+
+// ==========================================
+// Platform Configuration
+// ==========================================
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+
+// (1 == iPhone, 2 == iPad). iPhone 専用なら 1 のみ。
+// iPad 対応にすると ASC で iPad 13"/12.9" スクショ必須になり、企画外の対応コストが増える。
+TARGETED_DEVICE_FAMILY = 1
+
+// ==========================================
+// Swift 6 / strict concurrency
+// ==========================================
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+
+// ==========================================
+// Info PLIST — 手動管理（UIAppFonts 含む、auto-generate OFF）
+// ==========================================
+GENERATE_INFOPLIST_FILE = NO
+INFOPLIST_FILE = Config/<ExampleApp>-Info.plist
+
+// ==========================================
+// Signing (Automatic)
+// ==========================================
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = <YOUR_TEAM_ID>
+
+// ==========================================
+// Entitlements
+// ==========================================
+CODE_SIGN_ENTITLEMENTS = Config/<ExampleApp>.entitlements
+
+// ==========================================
+// App Icons
+// ==========================================
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+// v1.1 以降: ALTERNATE_APPICON_NAMES = AppIcon-Light AppIcon-Dark を追加
+ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES
+
+// ==========================================
+// Secrets (overridden by Config/secrets.xcconfig — gitignored)
+// ==========================================
+REVENUECAT_API_KEY =
+SENTRY_DSN =
+ADMOB_APP_ID =
+INFOPLIST_KEY_REVENUECAT_API_KEY = $(REVENUECAT_API_KEY)
+INFOPLIST_KEY_SENTRY_DSN = $(SENTRY_DSN)
+
+// If Config/secrets.xcconfig exists, include it to override the above with real values.
+// Developers should create this file locally (never committed).
+#include? "secrets.xcconfig"

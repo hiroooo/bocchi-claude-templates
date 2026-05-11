@@ -1,0 +1,51 @@
+<!doctype html>
+<!--
+  X Articles 用 timeline 画像 skeleton (vertical timeline、左 date / 右 event+note、中央に connector 線)
+  Usage:
+    1. このファイルを <article-folder>/tables/table-NN-timeline.html にコピー
+    2. <_styles.css> を同 tables/ にコピー (skill templates/table-styles.css → tables/_styles.css)
+    3. .timeline 内の rows を中身で置き換え
+    4. python3 ~/.claude/skills/x-article-writer/scripts/render-tables.py <tables-dir>
+
+  CSS class 早見:
+    .timeline       全体ラッパー (左 padding + 縦 connector 線)
+    .row            1 イベント (左 .date / 右 .body)
+    .row.milestone  yellow 強調 (リリース日 / 区切り)
+    .date           日付 (SF Mono、右寄せ)
+    .body .event    タイトル (太字、黒)
+    .body .note     補足 (muted)
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Timeline — &lt;slug&gt;</title>
+<link rel="stylesheet" href="_styles.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="timeline">
+    <div class="row">
+      <div class="date">YYYY-MM</div>
+      <div class="body">
+        <div class="event">通常イベントタイトル</div>
+        <div class="note">補足説明 (短く 1-2 行)</div>
+      </div>
+    </div>
+    <div class="row milestone">
+      <div class="date">YYYY-MM-DD</div>
+      <div class="body">
+        <div class="event">マイルストーン (yellow 強調)</div>
+        <div class="note">リリース / 区切りの日に使う</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="date">YYYY-MM</div>
+      <div class="body">
+        <div class="event">通常イベント</div>
+        <div class="note">補足</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

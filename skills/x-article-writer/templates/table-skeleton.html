@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  X Articles 用 table 画像 skeleton
+  Usage:
+    1. このファイルを <article-folder>/tables/table-NN-<slug>.html にコピー
+    2. <_styles.css> を同 tables/ にコピー (skill templates/table-styles.css → tables/_styles.css)
+    3. tbody の rows を中身で置き換え
+    4. python3 ~/.claude/skills/x-article-writer/scripts/render-tables.py <tables-dir>
+
+  CSS class 早見:
+    th.num         数字列 header (中央揃え 110px)
+    th.right       右寄せ
+    th.accent      yellow accent header
+    td.num         番号 (yellow mono)
+    td.bold        太字 (黒)
+    td.mono        SF Mono muted (パス / 日付 / バージョン)
+    td.muted       muted (補足列)
+    td.accent      yellow accent (強調値)
+    tr.highlight   yellow tinted row (合計 / マイルストーン)
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Table — &lt;slug&gt;</title>
+<link rel="stylesheet" href="_styles.css">
+</head>
+<body>
+<div class="wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>列1</th>
+        <th>列2</th>
+        <th>列3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bold">行 1 列 1</td>
+        <td class="mono">行 1 列 2</td>
+        <td class="muted">行 1 列 3</td>
+      </tr>
+      <tr>
+        <td class="bold">行 2 列 1</td>
+        <td class="mono">行 2 列 2</td>
+        <td class="muted">行 2 列 3</td>
+      </tr>
+      <tr class="highlight">
+        <td class="bold">合計 / マイルストーン行</td>
+        <td class="accent">強調値</td>
+        <td>補足</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 1 画像に 2 table 入れたい場合: 間に section-label を挟む
+  <div class="section-label">第 2 セクション名</div>
+  <table> ... </table>
+  -->
+</div>
+</body>
+</html>

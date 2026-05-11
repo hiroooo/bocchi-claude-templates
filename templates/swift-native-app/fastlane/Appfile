@@ -1,0 +1,7 @@
+app_identifier("<your.bundle.prefix>.<example-app>")
+apple_id("<your-apple-id-email@example.com>")
+
+# Developer Portal Team ID
+team_id("<YOUR_TEAM_ID>")
+
+# ASC API Key 運用のため itc_team_id は不要（Fastfile 側で api_key 渡す）

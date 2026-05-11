@@ -1,0 +1,219 @@
+# <ExampleApp> Fastfile
+#
+# 登録: fastlane register
+# 配信: fastlane beta
+# 提出: fastlane submit_for_review app_identifier:<your.bundle.prefix>.<example-app>
+#
+# 環境変数は fastlane/.env に置く（.gitignore 済み）。
+# ASC API Key 方式で 2FA 不要、produce は使わず Spaceship::ConnectAPI 直叩き。
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Apple Developer Portal + App Store Connect に <ExampleApp> を自動登録（ConnectAPI 直叩き）"
+  lane :register do
+    ensure_env_vars(env_vars: ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH"])
+
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: File.expand_path(ENV["ASC_KEY_PATH"]),
+      duration: 1200,
+      in_house: false,
+      set_spaceship_token: true
+    )
+
+    bundle_id_str = "<your.bundle.prefix>.<example-app>"
+    widget_bundle_id_str = "<your.bundle.prefix>.<example-app>.widgets"
+    app_name = "<ExampleApp>"
+    group_id = "group.<your.bundle.prefix>.<example-app>.shared"
+    group_name = "<ExampleApp> Shared Group"
+
+    # --- 1. Bundle ID 登録（メインアプリ）---
+    bundle_id = Spaceship::ConnectAPI::BundleId.all.find { |b| b.identifier == bundle_id_str }
+    if bundle_id.nil?
+      bundle_id = Spaceship::ConnectAPI::BundleId.create(
+        name: app_name,
+        identifier: bundle_id_str,
+        platform: "IOS"
+      )
+      UI.success("✅ Bundle ID 登録: #{bundle_id_str}")
+    else
+      UI.success("✅ Bundle ID 既存: #{bundle_id_str}")
+    end
+
+    # --- 1-2. Widget Extension の Bundle ID 登録 ---
+    widget_bundle_id = Spaceship::ConnectAPI::BundleId.all.find { |b| b.identifier == widget_bundle_id_str }
+    if widget_bundle_id.nil?
+      Spaceship::ConnectAPI::BundleId.create(
+        name: "<ExampleApp> Widgets",
+        identifier: widget_bundle_id_str,
+        platform: "IOS"
+      )
+      UI.success("✅ Widget Bundle ID 登録: #{widget_bundle_id_str}")
+    else
+      UI.success("✅ Widget Bundle ID 既存: #{widget_bundle_id_str}")
+    end
+
+    # --- 2. Capabilities 追加 ---
+    %w[APP_GROUPS PUSH_NOTIFICATIONS ICLOUD].each do |cap|
+      begin
+        bundle_id.create_capability(capability_type: cap)
+        UI.success("✅ Capability 追加: #{cap}")
+      rescue StandardError => e
+        UI.important("ℹ️  Capability #{cap}: #{e.message.to_s.lines.first&.strip}")
+      end
+    end
+
+    # --- 3. App Group 登録 ---
+    begin
+      existing_group = Spaceship::ConnectAPI::AppGroup.all.find { |g| g.identifier == group_id }
+      if existing_group.nil?
+        Spaceship::ConnectAPI::AppGroup.create(
+          identifier: group_id,
+          name: group_name
+        )
+        UI.success("✅ App Group 登録: #{group_id}")
+      else
+        UI.success("✅ App Group 既存: #{group_id}")
+      end
+    rescue StandardError => e
+      UI.important("⚠️  App Group 処理失敗: #{e.message.to_s.lines.first&.strip}")
+    end
+
+    # --- 4. App Store Connect App 登録 ---
+    begin
+      app = Spaceship::ConnectAPI::App.find(bundle_id_str)
+      if app.nil?
+        Spaceship::ConnectAPI::App.create(
+          bundle_id: bundle_id_str,
+          name: app_name,
+          sku: "<example-app>-ios-001",
+          primary_locale: "ja",
+          platforms: ["IOS"]
+        )
+        UI.success("✅ App Store Connect App 登録: #{app_name}")
+      else
+        UI.success("✅ App Store Connect App 既存: #{app_name}")
+      end
+    rescue StandardError => e
+      UI.important("⚠️  ASC App 登録失敗: #{e.message.to_s.lines.first&.strip}")
+    end
+
+    UI.success("==========================================")
+    UI.success("🎉 Apple Portal + ASC 登録完了")
+    UI.success("==========================================")
+    UI.important("ℹ️  残タスク（手動）:")
+    UI.important("   - CloudKit Container (iCloud.<your.bundle.prefix>.<example-app>) は Portal GUI で登録（ConnectAPI 非対応）")
+    UI.important("   - Bundle ID と App Group の紐付けは Xcode Signing & Capabilities で確認")
+  end
+
+  desc "TestFlight β 配信"
+  lane :beta do
+    ensure_env_vars(env_vars: ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH"])
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: File.expand_path(ENV["ASC_KEY_PATH"]),
+      in_house: false
+    )
+
+    scheme = "<ExampleApp>"
+    project = "<ExampleApp>.xcodeproj"
+    app_identifier = "<your.bundle.prefix>.<example-app>"
+
+    # Build number は Config/Shared.xcconfig の CURRENT_PROJECT_VERSION で手動管理。
+    # increment_build_number は Info.plist 内の $(CURRENT_PROJECT_VERSION) 参照を数字にハードコードして
+    # しまう副作用があるため使わない。次回 beta 前に Shared.xcconfig を手動 bump すること。
+    latest = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: app_identifier,
+      initial_build_number: 0
+    )
+    UI.message("TestFlight 最新 build: #{latest} / 今回アップロード予定: CURRENT_PROJECT_VERSION (Shared.xcconfig)")
+
+    build_app(
+      project: project,
+      scheme: scheme,
+      configuration: "Release",
+      clean: true,
+      output_directory: "build",
+      output_name: "<ExampleApp>.ipa",
+      export_method: "app-store",
+      xcargs: "-skipPackagePluginValidation -allowProvisioningUpdates"
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: app_identifier,
+      skip_waiting_for_build_processing: true,
+      changelog: "開発ビルド",
+      distribute_external: false
+    )
+
+    UI.success("TestFlight アップロード完了")
+  end
+
+  desc "version に build を attach（submit はユーザーが ASC GUI で行う）"
+  lane :attach_build do |options|
+    ensure_env_vars(env_vars: ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH"])
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: File.expand_path(ENV["ASC_KEY_PATH"]),
+      duration: 1200,
+      in_house: false,
+      set_spaceship_token: true
+    )
+
+    version_id = options[:version_id]
+    build_id   = options[:build_id]
+    app_id     = options[:app_id]
+    UI.user_error!("version_id, build_id, app_id required") if version_id.nil? || build_id.nil? || app_id.nil?
+
+    version = Spaceship::ConnectAPI::AppStoreVersion.get(app_store_version_id: version_id)
+    version.select_build(build_id: build_id)
+
+    UI.success("✅ build #{build_id} を version #{version_id} に attach 完了")
+    UI.important("次: ASC GUI で「審査用に追加」ボタン → Export Compliance / Content Rights 確認 → 提出")
+    UI.important("URL: https://appstoreconnect.apple.com/apps/#{app_id}/distribution/ios/version/#{version_id}")
+  end
+
+  desc "version を「審査用に追加」(deliver action で reviewSubmissions API を叩く)"
+  lane :submit_for_review do |options|
+    ensure_env_vars(env_vars: ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH"])
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: File.expand_path(ENV["ASC_KEY_PATH"]),
+      duration: 1200,
+      in_house: false
+    )
+
+    app_identifier = options[:app_identifier]
+    UI.user_error!("app_identifier required (e.g. <your.bundle.prefix>.<example-app>)") if app_identifier.nil? || app_identifier.to_s.empty?
+
+    deliver(
+      api_key: api_key,
+      app_identifier: app_identifier,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      skip_binary_upload: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        content_rights_contains_third_party_content: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+
+    UI.success("✅ submitted for review (#{app_identifier})")
+  end
+end

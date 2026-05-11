@@ -1,0 +1,38 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor backups
+*.bak
+*~
+*.swp
+
+# Local env / secrets — テンプレに本物の secrets が混入しないように
+.env
+.env.local
+*.p8
+*.mobileprovision
+secrets.xcconfig
+
+# fastlane local state
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/.env
+
+# Build artifacts
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Scratch / 一時ファイル (Claude Code MCP が散らかす場所)
+.scratch/

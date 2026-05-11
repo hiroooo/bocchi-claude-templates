@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{TITLE}}</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --bg: #000;
+  --panel: #16181c;
+  --text: #e7e9ea;
+  --muted: #71767b;
+  --border: #2f3336;
+  --link: #1d9bf0;
+  --ok: #00ba7c;
+  --warn: #f4212e;
+  --accent: #f4d03f;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { position: static !important; max-height: none !important; }
+}
+
+/* ===== TOC (left sidebar) ===== */
+.toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 18px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 13px;
+}
+.toc h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.toc li { margin: 0; }
+.toc a {
+  display: block;
+  padding: 7px 10px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 6px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.toc a:hover {
+  color: var(--text);
+  background: rgba(29, 155, 240, 0.08);
+}
+.toc a.active {
+  color: var(--link);
+  background: rgba(29, 155, 240, 0.12);
+  border-left-color: var(--link);
+}
+.toc .sub a {
+  padding-left: 22px;
+  font-size: 12px;
+}
+.toc .step-num-mini {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  color: #000;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.toc a.active .step-num-mini { background: var(--link); color: #fff; }
+
+/* ===== Main content ===== */
+.main { min-width: 0; }
+
+/* ===== Hero header (bocchi icon + title) ===== */
+.hero {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 26px 28px;
+  background: linear-gradient(135deg, #1a1d24 0%, #0f1419 60%, #1d9bf0 200%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(29, 155, 240, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.bocchi-avatar {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  background: #000 center/cover no-repeat;
+  box-shadow: 0 4px 20px rgba(244, 208, 63, 0.3), 0 0 0 6px rgba(244, 208, 63, 0.1);
+  flex-shrink: 0;
+}
+.hero h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, #fff 0%, #c9d1d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.hero .tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  background: rgba(244, 208, 63, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(244, 208, 63, 0.3);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  position: relative;
+  z-index: 1;
+}
+.meta b { color: var(--accent); margin-right: 6px; font-weight: 700; }
+@media (max-width: 600px) {
+  .hero-grid { grid-template-columns: 64px 1fr; gap: 14px; }
+  .bocchi-avatar { width: 64px; height: 64px; border-width: 2px; }
+  .hero h1 { font-size: 18px; }
+}
+
+.step {
+  margin-bottom: 24px;
+  padding: 22px 26px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  scroll-margin-top: 24px;
+}
+.step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--link); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  flex-shrink: 0;
+}
+.step-head h2 { margin: 0; font-size: 18px; flex: 1; }
+.step-head .time { color: var(--muted); font-size: 13px; }
+
+.copy-block {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  scroll-margin-top: 24px;
+}
+.copy-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #0d0d0d;
+  border-bottom: 1px solid var(--border);
+}
+.copy-head .label { font-weight: 600; font-size: 13px; flex: 1; }
+.copy-head .weight { color: var(--muted); font-size: 12px; font-family: monospace; }
+.copy-btn, .download-btn, .tab-btn {
+  background: var(--link);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+.copy-btn:hover, .download-btn:hover { background: #1a8cd8; }
+.copy-btn.copied { background: var(--ok); }
+.download-btn { background: #2f3336; }
+.download-btn:hover { background: #3f4348; }
+
+/* Markdown preview tab switch */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 12px 0;
+  background: #0d0d0d;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+}
+.tab-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.tab-btn.active {
+  background: var(--panel);
+  color: var(--text);
+  border-bottom: 2px solid var(--link);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+pre {
+  margin: 0;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  max-height: 360px;
+  overflow-y: auto;
+}
+pre.tall { max-height: 540px; }
+
+/* Markdown preview rendered HTML */
+.md-preview {
+  padding: 18px 22px;
+  max-height: 540px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.md-preview h1, .md-preview h2, .md-preview h3 {
+  margin: 1.2em 0 0.5em;
+  line-height: 1.3;
+}
+.md-preview h1 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.md-preview h2 { font-size: 17px; color: var(--accent); }
+.md-preview h3 { font-size: 15px; color: var(--link); }
+.md-preview p { margin: 0.6em 0; }
+.md-preview ul, .md-preview ol { padding-left: 1.5em; margin: 0.6em 0; }
+.md-preview li { margin: 0.2em 0; }
+.md-preview code {
+  background: #0d0d0d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.md-preview pre {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 0.8em 0;
+}
+.md-preview pre code { background: transparent; padding: 0; }
+.md-preview blockquote {
+  border-left: 3px solid var(--link);
+  padding: 4px 14px;
+  margin: 0.8em 0;
+  color: var(--muted);
+  background: rgba(29, 155, 240, 0.05);
+  border-radius: 0 6px 6px 0;
+}
+.md-preview a { color: var(--link); }
+.md-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.md-preview hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+.md-preview table {
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  width: 100%;
+}
+.md-preview th, .md-preview td {
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  text-align: left;
+}
+.md-preview th { background: #0d0d0d; }
+
+/* Review card (4-axis scoring) */
+.review-step .step-num { background: var(--accent); color: #000; }
+.review-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.review-summary .pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(244, 208, 63, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(244, 208, 63, 0.3);
+}
+.review-summary .pill.ok { background: rgba(0, 186, 124, 0.1); color: var(--ok); border-color: rgba(0, 186, 124, 0.3); }
+.review-summary .pill.warn { background: rgba(244, 33, 46, 0.1); color: var(--warn); border-color: rgba(244, 33, 46, 0.3); }
+.review-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.rtab-btn {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+.rtab-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.rtab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.rtab-btn .rscore {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: #0d0d0d;
+  color: var(--muted);
+  font-family: monospace;
+}
+.rtab-btn.active .rscore { color: var(--accent); }
+.rtab-content { display: none; }
+.rtab-content.active { display: block; }
+.review-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+.review-table th, .review-table td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.review-table th { background: #0d0d0d; color: var(--muted); font-weight: 600; }
+.review-table .judge {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.review-table .judge.PASS { color: var(--ok); }
+.review-table .judge.FAIL { color: var(--warn); }
+.review-table .judge.NEEDS { color: var(--accent); }
+.review-table .judge.WARN { color: var(--accent); }
+.observations {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  background: #0d0d0d;
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.observations .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.regen-log {
+  margin: 8px 0;
+  padding-left: 1.4em;
+  font-size: 13px;
+  color: var(--muted);
+}
+.regen-log li { margin: 4px 0; }
+
+/* Tweet preview (X dark card) */
+.tweet-preview {
+  padding: 16px 20px 12px;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+}
+.tweet-preview .tw-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #333 center/cover no-repeat;
+  flex-shrink: 0;
+}
+.tweet-preview .tw-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.tweet-preview .tw-name { font-weight: 700; color: var(--text); }
+.tweet-preview .tw-handle, .tweet-preview .tw-time { color: var(--muted); }
+.tweet-preview .tw-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.55;
+  padding: 4px 0 8px;
+  color: var(--text);
+}
+.tweet-preview .tw-actions {
+  display: flex;
+  gap: 28px;
+  color: var(--muted);
+  font-size: 13px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.tweet-preview .tw-actions span { display: inline-flex; align-items: center; gap: 4px; }
+
+.note {
+  margin: 8px 0;
+  padding: 10px 14px;
+  background: rgba(29, 155, 240, 0.08);
+  border-left: 3px solid var(--link);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.note.warn {
+  background: rgba(244, 33, 46, 0.08);
+  border-left-color: var(--warn);
+}
+code {
+  background: #0d0d0d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* Image card with download */
+.image-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 14px 16px;
+  background: rgba(29, 155, 240, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.image-card .thumb {
+  width: 72px; height: 72px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.image-card .info {
+  flex: 1;
+  min-width: 0;
+}
+.image-card .info .label {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 4px;
+  letter-spacing: 0.04em;
+}
+.image-card .info code {
+  font-size: 12px;
+  word-break: break-all;
+}
+.image-card .actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+h3.sub-head {
+  margin: 22px 0 10px;
+  font-size: 14px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+footer {
+  margin-top: 32px;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ===== Left TOC ===== -->
+  <nav class="toc">
+    <h3>Flow</h3>
+    <ol>
+      <li><a href="#header"><span class="step-num-mini">📡</span>概要</a></li>
+      {{REVIEW_TOC_ITEM}}
+      {{ARTICLE_TOC_ITEMS}}
+      <li><a href="#step-main"><span class="step-num-mini">{{MAIN_STEP_NUM}}</span>X 通常投稿</a>
+        <ol class="sub">
+          <li><a href="#main-block">Main</a></li>
+{{TOC_REPLY_ITEMS}}
+        </ol>
+      </li>
+      <li><a href="#step-tail"><span class="step-num-mini">{{TAIL_STEP_NUM}}</span>60 分張り付き返信</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===== Main content ===== -->
+  <div class="main">
+
+    <header class="hero" id="header">
+      <div class="hero-grid">
+        <div class="bocchi-avatar" style="background-image: url('{{BOCCHI_AVATAR_REL}}');"></div>
+        <div>
+          <span class="tag">📡 BOCCHI X FLOW</span>
+          <h1>{{TITLE}}</h1>
+          <p class="subtitle">{{SUBTITLE}}</p>
+        </div>
+      </div>
+      <div class="meta">
+        <span><b>戦略</b>{{STRATEGY}}</span>
+        <span><b>狙い</b>{{GOAL}}</span>
+        <span><b>所要</b>{{DURATION}}</span>
+      </div>
+    </header>
+
+    {{REVIEW_BLOCK}}
+
+    {{ARTICLE_STEPS}}
+
+    <!-- Step: 通常投稿 -->
+    <div class="step" id="step-main">
+      <div class="step-head">
+        <span class="step-num">{{MAIN_STEP_NUM}}</span>
+        <h2>X 通常投稿 を発射 (推奨 19:00)</h2>
+        <span class="time">10-15 分</span>
+      </div>
+      <p class="note">メイン投稿 → <b>1 分間隔</b>でセルフリプ 1-N を順次連投 (75x boost 最大化)</p>
+
+      <h3 class="sub-head">🔵 Main</h3>
+      {{MAIN_BLOCK}}
+      {{MAIN_IMAGE_CARD}}
+
+      <h3 class="sub-head">↳ セルフリプ (各 1 分間隔)</h3>
+      {{REPLY_BLOCKS}}
+    </div>
+
+    <!-- Step: 張り付き返信 -->
+    <div class="step" id="step-tail">
+      <div class="step-head">
+        <span class="step-num">{{TAIL_STEP_NUM}}</span>
+        <h2>60 分張り付き返信</h2>
+        <span class="time">60 分</span>
+      </div>
+      <p>リプライ・引用 RT に <b>全返信</b>。著者リプ 75x boost を複利で積む。質問には「これは ◯◯ で〜」と本文化、「ありがとう」だけだと boost 弱い。</p>
+      <p class="note">投稿後 <b>60 分以内のエンゲージメントが初速の鍵</b> (X アルゴリズム)。この時間は他作業を入れない。</p>
+    </div>
+
+    <footer>
+      生成 by <code>x-article-writer</code> skill — flow-template.html
+    </footer>
+
+  </div>
+</div>
+
+<script>
+// ===== Copy buttons (plain text) =====
+document.querySelectorAll('.copy-btn:not(.rich-html)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    navigator.clipboard.writeText(target.textContent).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✅ コピー済';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  });
+});
+
+// ===== Rich HTML copy buttons (text/html + text/plain) =====
+// X Articles (Draft.js) / Notion / Google Docs 等は text/html クリップボードを読んで
+// 見出し / 引用 / リスト / 太字 等のフォーマットを自動展開する
+document.querySelectorAll('.copy-btn.rich-html').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const htmlTarget = document.getElementById(btn.dataset.htmlTarget);
+    const plainTarget = document.getElementById(btn.dataset.plainTarget);
+    if (!htmlTarget || !plainTarget) return;
+    // marked.js で初回 render (lazy)
+    if (!htmlTarget.dataset.rendered) {
+      const srcId = htmlTarget.dataset.mdSource;
+      const src = srcId ? document.getElementById(srcId) : null;
+      if (src && window.marked) {
+        htmlTarget.innerHTML = window.marked.parse(src.textContent);
+        htmlTarget.dataset.rendered = '1';
+      }
+    }
+    const html = htmlTarget.innerHTML;
+    const plain = plainTarget.textContent;
+    const orig = btn.textContent;
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([plain], { type: 'text/plain' }),
+      })]);
+      btn.textContent = '✅ HTML コピー済';
+      btn.classList.add('copied');
+    } catch (e) {
+      // フォールバック (古いブラウザ等): plain のみ
+      try {
+        await navigator.clipboard.writeText(plain);
+        btn.textContent = '⚠️ プレーンのみ';
+      } catch (e2) {
+        btn.textContent = '❌ コピー失敗';
+      }
+    }
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+});
+
+// ===== Markdown preview tabs =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+    if (!tabId) return;
+    const wrapper = btn.closest('.copy-block');
+    if (!wrapper) return;
+    wrapper.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    wrapper.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+    // Lazy render any .md-preview in the newly active tab
+    const activeContent = wrapper.querySelector('.tab-content.active');
+    if (activeContent) {
+      activeContent.querySelectorAll('.md-preview').forEach(box => {
+        if (box.dataset.rendered) return;
+        const srcId = box.dataset.mdSource;
+        const src = srcId ? document.getElementById(srcId) : null;
+        if (src && window.marked) {
+          box.innerHTML = window.marked.parse(src.textContent);
+          box.dataset.rendered = '1';
+        }
+      });
+    }
+  });
+});
+
+// ===== Initial render for default-active md-preview tabs =====
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-content.active .md-preview').forEach(box => {
+    if (box.dataset.rendered) return;
+    const srcId = box.dataset.mdSource;
+    const src = srcId ? document.getElementById(srcId) : null;
+    if (src && window.marked) {
+      box.innerHTML = window.marked.parse(src.textContent);
+      box.dataset.rendered = '1';
+    }
+  });
+});
+
+// ===== Review tabs =====
+document.querySelectorAll('.rtab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.rtab;
+    if (!tabId) return;
+    const wrapper = btn.closest('.review-step');
+    if (!wrapper) return;
+    wrapper.querySelectorAll('.rtab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    wrapper.querySelectorAll('.rtab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+  });
+});
+
+// ===== TOC active highlight =====
+const links = document.querySelectorAll('.toc a');
+const targets = Array.from(links)
+  .map(a => document.querySelector(a.getAttribute('href')))
+  .filter(Boolean);
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      links.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+targets.forEach(t => observer.observe(t));
+</script>
+
+</body>
+</html>

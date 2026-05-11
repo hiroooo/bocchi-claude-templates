@@ -1,0 +1,226 @@
+/* X Articles 本文に馴染む light theme — text/border 色を X UI と一致 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1500px;
+  background: #ffffff;
+  color: #0f1419;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Kaku Gothic ProN", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  position: relative;
+  padding: 24px 0;
+  width: 1500px;
+}
+
+.wrap { position: relative; z-index: 1; }
+
+/* 章見出し / 装飾は記事側に任せ、画像は table 本体のみに */
+.crest, .title, .subtitle, .footer { display: none; }
+
+table { width: 100%; border-collapse: collapse; font-size: 34px; line-height: 1.55; }
+
+thead th {
+  text-align: left;
+  padding: 26px 32px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #536471;
+  letter-spacing: 0.04em;
+  background: #f7f9f9;
+  border-top: 1px solid #eff3f4;
+  border-bottom: 1px solid #eff3f4;
+  white-space: nowrap;
+}
+thead th.num { width: 110px; text-align: center; }
+thead th.right { text-align: right; }
+thead th.accent { color: #b8941f; }
+
+tbody td {
+  padding: 30px 32px;
+  border-bottom: 1px solid #eff3f4;
+  color: #0f1419;
+  vertical-align: middle;
+}
+tbody td.num {
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  color: #b8941f;
+  font-weight: 700;
+  font-size: 36px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+tbody td.bold { font-weight: 700; color: #0f1419; }
+tbody td.mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 26px; color: #536471; letter-spacing: 0.02em; white-space: nowrap; }
+tbody td.muted { color: #536471; font-size: 30px; }
+tbody td.right { text-align: right; }
+tbody td.accent { color: #b8941f; font-weight: 700; }
+
+tbody tr:last-child td { border-bottom: none; }
+
+tbody tr.highlight td {
+  background: #fffbea;
+  border-top: 1px solid #f0e0a0;
+  border-bottom: 1px solid #f0e0a0;
+  font-weight: 700;
+}
+tbody tr.highlight td.bold { color: #0f1419; }
+tbody tr.highlight td.accent { color: #b8941f; }
+
+/* timeline-card — vertical timeline (table と別 visual) */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 280px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: #eff3f4;
+}
+.timeline .row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 60px;
+  padding: 28px 0;
+  align-items: start;
+}
+.timeline .row::before {
+  content: "";
+  position: absolute;
+  left: 270px;
+  top: 38px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #d0d4d9;
+  z-index: 2;
+}
+.timeline .row.milestone::before {
+  background: #b8941f;
+  border-color: #b8941f;
+  box-shadow: 0 0 0 4px rgba(244, 208, 63, 0.18);
+}
+.timeline .date {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: #536471;
+  letter-spacing: 0.02em;
+  text-align: right;
+  padding-right: 18px;
+  line-height: 1.3;
+}
+.timeline .row.milestone .date { color: #b8941f; }
+.timeline .body { padding-left: 30px; }
+.timeline .event {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f1419;
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+.timeline .row.milestone .event { color: #b8941f; }
+.timeline .note {
+  font-size: 26px;
+  color: #536471;
+  line-height: 1.5;
+}
+
+/* セクションラベル (1 画像に複数 table を入れる時の区切り) */
+.section-label {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f1419;
+  padding: 28px 0 14px;
+  letter-spacing: 0.02em;
+}
+.section-label:first-child { padding-top: 0; }
+
+/* KPI grid */
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.kpi .cell {
+  padding: 32px 28px;
+  background: #f7f9f9;
+  border: 1px solid #eff3f4;
+  border-radius: 8px;
+}
+.kpi .cell .label {
+  font-size: 16px;
+  color: #536471;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.kpi .cell .value {
+  font-size: 52px;
+  font-weight: 800;
+  color: #0f1419;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.kpi .cell .value.accent { color: #b8941f; }
+.kpi .cell .unit { color: #536471; font-size: 16px; font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; }
+
+/* compare 2-col */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.compare .col {
+  border: 1px solid #eff3f4;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 32px 32px 16px 32px;
+}
+.compare .col.discard { border-top: 3px solid #c62828; }
+.compare .col.adopt { border-top: 3px solid #b8941f; }
+.compare .col h3 {
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #0f1419;
+}
+.compare .col h3 .badge {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  padding: 5px 12px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.compare .col.discard h3 .badge { background: #fee; color: #c62828; }
+.compare .col.adopt h3 .badge { background: #fffbea; color: #b8941f; }
+.compare .col .item {
+  padding: 20px 0;
+  border-top: 1px solid #eff3f4;
+  font-size: 24px;
+  line-height: 1.5;
+}
+.compare .col .item:first-of-type { border-top: none; }
+.compare .col .item .name {
+  font-weight: 700;
+  color: #0f1419;
+  margin-bottom: 6px;
+  font-size: 26px;
+}
+.compare .col .item .desc { color: #536471; font-size: 22px; }
